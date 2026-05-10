@@ -56,6 +56,10 @@ BEGIN
 END;
 GO
 
+EXEC sp_TatCaSanPham;
+GO
+
+
 -- 2) Nhận vào MaKH và hiển thị thông tin chi tiết của khách hàng đó
 CREATE OR ALTER PROCEDURE sp_TimKhachHang
 	@MaKH INT
@@ -70,6 +74,10 @@ BEGIN
 	WHERE MaKH = @MaKH;
 END;
 GO
+
+EXEC sp_TimKhachHang @MaKH = 1;
+GO
+
 
 -- 3) Nhận vào một ngày, hiển thị các hóa đơn lập trong ngày đó
 CREATE OR ALTER PROCEDURE sp_HoaDonTheoNgay
@@ -87,6 +95,10 @@ BEGIN
 END;
 GO
 
+EXEC sp_HoaDonTheoNgay @Ngay = '2024-08-01';
+GO
+
+
 -- 4) Hiển thị các sản phẩm có đơn giá lớn hơn giá trị X truyền vào
 CREATE OR ALTER PROCEDURE sp_SanPhamGiaCao
 	@GiaX DECIMAL(10,2)
@@ -101,6 +113,10 @@ BEGIN
 	WHERE DonGia > @GiaX;
 END;
 GO
+
+EXEC sp_SanPhamGiaCao @GiaX = 500;
+GO
+
 
 -- 5) Nhận vào MaHD, hiển thị tên sản phẩm và số lượng tương ứng của hóa đơn đó
 CREATE OR ALTER PROCEDURE sp_ChiTietMuaHang
@@ -118,6 +134,10 @@ BEGIN
 	WHERE cthd.MaHD = @MaHD;
 END;
 GO
+
+EXEC sp_ChiTietMuaHang @MaHD = 101;
+GO
+
 
 -- ================================================================
 -- PHẦN 2: STORED PROCEDURE - OUTPUT PARAMETER
@@ -140,6 +160,11 @@ BEGIN
 END;
 GO
 
+DECLARE @SoHD INT;
+EXEC sp_TongHoaDon_KH @MaKH = 1, @TongHoaDon = @SoHD OUTPUT;
+SELECT @SoHD AS TongHoaDon;
+
+
 -- 2) Nhận vào MaHD, trả về tổng thành tiền của hóa đơn đó
 CREATE OR ALTER PROCEDURE sp_TongThanhTien_HD
 	@MaHD INT,
@@ -157,6 +182,11 @@ BEGIN
 END;
 GO
 
+DECLARE @Tien DECIMAL(18,2);
+EXEC sp_TongThanhTien_HD @MaHD = 101, @TongTien = @Tien OUTPUT;
+SELECT @Tien AS TongThanhTien;
+
+
 -- 3) Nhận vào MaSP, trả về tổng số lượng sản phẩm đó đã bán được
 CREATE OR ALTER PROCEDURE sp_TongSoLuongBan_SP
 	@MaSP INT,
@@ -171,6 +201,11 @@ BEGIN
 	WHERE MaSP = @MaSP;
 END;
 GO
+
+DECLARE @SL INT;
+EXEC sp_TongSoLuongBan_SP @MaSP = 1002, @TongSoLuong = @SL OUTPUT;
+SELECT @SL AS TongSoLuong;
+
 
 -- 4) Trả về tên sản phẩm có đơn giá cao nhất hiện nay
 CREATE OR ALTER PROCEDURE sp_TenSanPhamGiaCaoNhat
@@ -187,6 +222,11 @@ BEGIN
 	ORDER BY DonGia DESC, MaSP ASC;
 END;
 GO
+
+DECLARE @Ten NVARCHAR(100);
+EXEC sp_TenSanPhamGiaCaoNhat @TenSP = @Ten OUTPUT;
+SELECT @Ten AS SanPhamGiaCaoNhat;
+
 
 -- 5) Nhận vào tháng/năm, trả về tổng doanh thu của tháng đó
 CREATE OR ALTER PROCEDURE sp_DoanhThu_Thang
@@ -209,32 +249,29 @@ BEGIN
 END;
 GO
 
-/*
-Gợi ý cách chạy thử từng thủ tục:
-
-EXEC sp_TatCaSanPham;
-EXEC sp_TimKhachHang @MaKH = 1;
-EXEC sp_HoaDonTheoNgay @Ngay = '2024-08-01';
-EXEC sp_SanPhamGiaCao @GiaX = 500;
-EXEC sp_ChiTietMuaHang @MaHD = 101;
-
-DECLARE @SoHD INT;
-EXEC sp_TongHoaDon_KH @MaKH = 1, @TongHoaDon = @SoHD OUTPUT;
-SELECT @SoHD AS TongHoaDon;
-
-DECLARE @Tien DECIMAL(18,2);
-EXEC sp_TongThanhTien_HD @MaHD = 101, @TongTien = @Tien OUTPUT;
-SELECT @Tien AS TongThanhTien;
-
-DECLARE @SL INT;
-EXEC sp_TongSoLuongBan_SP @MaSP = 1002, @TongSoLuong = @SL OUTPUT;
-SELECT @SL AS TongSoLuong;
-
-DECLARE @Ten NVARCHAR(100);
-EXEC sp_TenSanPhamGiaCaoNhat @TenSP = @Ten OUTPUT;
-SELECT @Ten AS SanPhamGiaCaoNhat;
-
 DECLARE @DT DECIMAL(18,2);
 EXEC sp_DoanhThu_Thang @Thang = 8, @Nam = 2024, @DoanhThu = @DT OUTPUT;
 SELECT @DT AS DoanhThuThang;
-*/
+
+/*
+Gợi ý cách chạy thử từng thủ tục:*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
