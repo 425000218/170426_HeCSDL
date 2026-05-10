@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEB_sub - Quản lý Mượn Trả Thiết Bị</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #f4f7f6; color: #333; }
+        .container { max-width: 1000px; margin: 20px auto; background: #fff; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .login-box { padding: 40px; text-align: center; }
+        select, input, button { padding: 10px; margin: 5px; border: 1px solid #bdc3c7; border-radius: 4px; }
+        button { background-color: #3498db; color: white; border: none; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        button:hover { background-color: #2980b9; }
+        .btn-danger { background-color: #e74c3c; }
+        .btn-danger:hover { background-color: #c0392b; }
+        .btn-success { background-color: #2ecc71; }
+        .btn-success:hover { background-color: #27ae60; }
+        .tabs { display: flex; background: #ecf0f1; border-bottom: 2px solid #bdc3c7; }
+        .tab { padding: 15px 20px; cursor: pointer; font-weight: bold; color: #7f8c8d; border-bottom: 3px solid transparent; }
+        .tab:hover { color: #2c3e50; }
+        .tab.active { color: #2980b9; border-bottom-color: #2980b9; }
+        .tab-content { padding: 20px; display: none; }
+        .tab-content.active { display: block; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #34495e; color: white; text-align: center; }
+        td { text-align: center; }
+        .form-panel { background: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #eee; }
+        .badge { padding: 5px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; color: white; }
+        .bg-admin { background: #e74c3c; } .bg-student { background: #2ecc71; } .bg-warning { background: #f1c40f; color: #333; }
+    </style>
+</head>
+<body>
+
+<!-- Giao diện Đăng nhập -->
+<div id="loginScreen" class="container" style="max-width: 500px; margin-top: 100px;">
+    <div class="header" style="justify-content: center;"><h2>SEB_sub Đăng Nhập</h2></div>
+    <div class="login-box">
+        <p style="margin-bottom: 15px; color: #7f8c8d;">Chọn quyền để trải nghiệm hệ thống</p>
+        <select id="userSelect" style="width: 100%; margin-bottom: 15px;">
+            <option value="">-- Chọn tài khoản --</option>
+            <option value="ADMIN01">Admin - Nguyễn Trưởng Phòng</option>
+            <option value="425000218">Sinh viên - Đặng Bắc Nam (425000218)</option>
+            <option value="525000631">Sinh viên - Lò Văn Duẩn (525000631)</option>
+        </select>
+        <button onclick="login()" style="width: 100%;">Đăng Nhập</button>
+    </div>
+</div>
+
+<!-- Giao diện Ứng dụng chính -->
+<div id="appScreen" class="container" style="display: none;">
+    <div class="header">
+        <div>
+            <h2>Hệ Thống SEB_sub</h2>
+            <span style="font-size: 14px;">Xin chào: <strong id="currentUserName"></strong> <span id="roleBadge" class="badge"></span></span>
+        </div>
+        <button class="btn-danger" onclick="logout()">Đăng Xuất</button>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('tabPhieuMuon')">Quản Lý Mượn Trả</div>
+        <div class="tab" id="tabMenuUser" onclick="switchTab('tabNguoiDung')">Quản Lý Người Dùng</div>
+    </div>
+
+    <!-- Tab Mượn Trả Thiết Bị -->
+    <div id="tabPhieuMuon" class="tab-content active">
+        <div id="studentForm" class="form-panel">
+            <h3 style="color: #2980b9; margin-bottom: 10px;">Đăng ký Mượn Thiết Bị</h3>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <select id="tbSelect">
+                    <option value="Máy chiếu Panasonic">Máy chiếu Panasonic (Kho: 5)</option>
+                    <option value="Cáp HDMI 2 mét">Cáp HDMI 2 mét (Kho: 20)</option>
+                    <option value="Loa kéo tay">Loa kéo tay Bluetooth (Kho: 2)</option>
+                </select>
+                <input type="number" id="soLuong" placeholder="SL" min="1" max="5" value="1" style="width: 80px;">
+                <label>Hẹn trả:</label> <input type="date" id="ngayTra">
+                <button class="btn-success" onclick="addPhieuMuon()">+ Tạo Phiếu</button>
+            </div>
+            <p style="font-size: 12px; color: #e74c3c; margin-top: 5px;">*Ghi chú: Thao tác này tương đương gọi `EXEC sp_TaoPhieuMuon` dưới MS SQL Server.</p>
+        </div>
+
+        <h3>Danh Sách Lịch Sử Mượn/Trả</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã Phiếu</th><th>Người Mượn</th><th>Thiết Bị</th><th>SL</th><th>Trạng Thái</th><th>Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody id="tablePhieuMuon"></tbody>
+        </table>
+    </div>
+
+    <!-- Tab Người Dùng (Chỉ Admin thấy) -->
+    <div id="tabNguoiDung" class="tab-content">
+        <div class="form-panel">
+            <h3 style="color: #2980b9; margin-bottom: 10px;">Thêm Người Dùng (Sinh Viên)</h3>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="newUserId" placeholder="Mã SV" style="width: 150px;">
+                <input type="text" id="newUserName" placeholder="Họ và tên sinh viên" style="flex: 1;">
+                <button class="btn-success" onclick="addUser()">+ Thêm User</button>
+            </div>
+        </div>
+
+        <h3>Danh Sách Người Dùng Hệ Thống</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Mã User (MSSV)</th><th>Họ và Tên</th><th>Quyền</th><th>Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody id="tableUser"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Dữ liệu mô phỏng
+    let currentUser = null;
+    let users = [
+        { id: 'ADMIN01', name: 'Nguyễn Trưởng Phòng', role: 'admin' },
+        { id: '425000218', name: 'Đặng Bắc Nam', role: 'student' },
+        { id: '525000631', name: 'Lò Văn Duẩn', role: 'student' }
+    ];
+    let thietBiList = [
+        { id: 'Máy chiếu Panasonic', name: 'Máy chiếu Panasonic', stock: 5 },
+        { id: 'Cáp HDMI 2 mét', name: 'Cáp HDMI 2 mét', stock: 20 },
+        { id: 'Loa kéo tay', name: 'Loa kéo tay Bluetooth', stock: 2 }
+    ];
+    let phieuMuonList = [
+        { id: 1, user: '425000218', tb: 'Máy chiếu Panasonic', sl: 1, date: '2026-05-10', status: 'Đang mượn' },
+        { id: 2, user: '525000631', tb: 'Cáp HDMI 2 mét', sl: 2, date: '2026-05-11', status: 'Đã trả' }
+    ];
+
+    function updateThietBiSelect() {
+        const select = document.getElementById('tbSelect');
+        if(!select) return;
+        select.innerHTML = '';
+        thietBiList.forEach(tb => {
+            select.innerHTML += `<option value="${tb.id}">${tb.name} (Kho: ${tb.stock})</option>`;
+        });
+    }
+
+    function login() {
+        const select = document.getElementById('userSelect');
+        if(!select.value) { alert("Vui lòng chọn tài khoản!"); return; }
+        
+        currentUser = users.find(u => u.id === select.value);
+        
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appScreen').style.display = 'block';
+        document.getElementById('currentUserName').innerText = currentUser.name;
+        
+        const badge = document.getElementById('roleBadge');
+        if(currentUser.role === 'admin') {
+            badge.innerText = "Quản Trị Viên"; badge.className = "badge bg-admin";
+            document.getElementById('tabMenuUser').style.display = 'block';
+            document.getElementById('studentForm').style.display = 'none'; // Admin ko tự mượn
+        } else {
+            badge.innerText = "Sinh Viên"; badge.className = "badge bg-student";
+            document.getElementById('tabMenuUser').style.display = 'none';
+            document.getElementById('studentForm').style.display = 'block';
+            updateThietBiSelect(); // Load danh sách đồ
+            switchTab('tabPhieuMuon'); // Ép về tab mượn
+        }
+
+        renderPhieuMuon();
+        renderUser();
+    }
+
+    function logout() {
+        currentUser = null;
+        document.getElementById('loginScreen').style.display = 'block';
+        document.getElementById('appScreen').style.display = 'none';
+        // Cập nhật lại list dropdown lúc đăng xuất (trường hợp admin vừa thêm user)
+        renderUserSelect();
+    }
+
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.target.classList.add('active');
+    }
+
+    function renderPhieuMuon() {
+        const tbody = document.getElementById('tablePhieuMuon');
+        tbody.innerHTML = '';
+        let visibleData = currentUser.role === 'admin' ? phieuMuonList : phieuMuonList.filter(p => p.user === currentUser.id);
+
+        visibleData.forEach(item => {
+            const statusColor = item.status === 'Đang mượn' ? '#e67e22' : '#2ecc71';
+            let userName = users.find(u => u.id === item.user)?.name || item.user;
+            let actionHtml = '';
+            
+            if(currentUser.role === 'admin') {
+                if(item.status === 'Đang mượn') {
+                    // Admin có quyền thu hồi thiết bị
+                    actionHtml = `<button class="btn-success" onclick="traThietBi(${item.id})">Thu Hồi</button> `;
+                    actionHtml += `<button class="btn-warning" onclick="chuyenNhuong(${item.id})">Chuyển Nhượng</button> `;
+                }
+                actionHtml += `<button class="btn-danger" onclick="xoaPhieu(${item.id})">Xóa</button>`;
+            } else {
+                actionHtml = `<span style="color:#7f8c8d; font-size:12px;">Chờ Admin cập nhật</span>`;
+            }
+
+            tbody.innerHTML += `<tr>
+                <td>PM-00${item.id}</td><td>${userName}</td><td>${item.tb}</td><td>${item.sl}</td>
+                <td><span class="badge" style="background:${statusColor}">${item.status}</span></td>
+                <td>${actionHtml}</td>
+            </tr>`;
+        });
+    }
+
+    function addPhieuMuon() {
+        const tbName = document.getElementById('tbSelect').value;
+        const sl = parseInt(document.getElementById('soLuong').value);
+        const date = document.getElementById('ngayTra').value;
+        if(!date) { alert("Vui lòng chọn ngày trả dự kiến!"); return; }
+
+        // Bẫy lỗi Ràng buộc toàn vẹn (CHECK constraint)
+        let today = new Date();
+        today.setHours(0,0,0,0);
+        let selectedDate = new Date(date);
+        selectedDate.setHours(0,0,0,0);
+        
+        if (selectedDate < today) {
+            alert("[LỖI SQL - Ràng Buộc CHECK]: Ngày hẹn trả không được nhỏ hơn ngày mượn (hôm nay). Vui lòng chọn lại ngày!");
+            return;
+        }
+
+        let tb = thietBiList.find(t => t.id === tbName);
+        
+        // Bẫy lỗi quá số lượng (Giả lập Trigger)
+        if (tb && sl > tb.stock) {
+            alert(`[LỖI SQL - Trigger trg_CheckSoLuongMuon]: Số lượng mượn (${sl}) vượt quá số lượng tồn kho hiện tại (${tb.stock}). Giao dịch đã bị ROLLBACK hủy bỏ!`);
+            return;
+        }
+
+        // Trừ tồn kho
+        if (tb) {
+            tb.stock -= sl;
+            updateThietBiSelect();
+        }
+
+        phieuMuonList.push({
+            id: Date.now().toString().slice(-4), // Giả lập sinh ID tự động
+            user: currentUser.id, tb: tbName, sl: sl, date: date, status: 'Đang mượn'
+        });
+        alert("Đã gửi yêu cầu mượn thành công! Số lượng tồn kho đã giảm.");
+        renderPhieuMuon();
+    }
+
+    function chuyenNhuong(id) {
+        let targetUserId = prompt("Tính năng Chuyển Nhượng (Trình diễn Case 3 Transaction)\\nNhập Mã Sinh Viên nhận đồ (vd: 525000631):");
+        if (!targetUserId) return;
+        
+        let targetUser = users.find(u => u.id === targetUserId);
+        if (!targetUser) {
+            alert("LỖI: Không tìm thấy sinh viên có mã này!");
+            return;
+        }
+
+        let p = phieuMuonList.find(p => p.id == id);
+        if (p) {
+            p.status = 'Đã chuyển nhượng'; // Cập nhật phiếu cũ
+            // Tạo phiếu mới (Không thay đổi kho)
+            phieuMuonList.push({
+                id: Date.now().toString().slice(-4),
+                user: targetUser.id, tb: p.tb, sl: p.sl, date: p.date, status: 'Đang mượn'
+            });
+            alert(`Chuyển nhượng thành công cho ${targetUser.name}! (Đã chạy Transaction an toàn, không làm lệch tồn kho)`);
+            renderPhieuMuon();
+        }
+    }
+
+    function traThietBi(id) {
+        let p = phieuMuonList.find(p => p.id == id);
+        if(p) { 
+            p.status = 'Đã trả'; 
+            // Hoàn lại kho
+            let tb = thietBiList.find(t => t.id === p.tb);
+            if(tb) {
+                tb.stock += parseInt(p.sl);
+                updateThietBiSelect();
+            }
+            alert("Đã cập nhật trạng thái phiếu: ĐÃ TRẢ! Tồn kho đã được hoàn lại tự động."); 
+            renderPhieuMuon(); 
+        }
+    }
+
+    function xoaPhieu(id) {
+        if(confirm("Bạn có chắc muốn xóa hủy phiếu này khỏi hệ thống?")) {
+            let p = phieuMuonList.find(p => p.id == id);
+            // Nếu phiếu đang mượn bị xóa, phải trả lại đồ vào kho
+            if(p && p.status === 'Đang mượn') {
+                let tb = thietBiList.find(t => t.id === p.tb);
+                if(tb) {
+                    tb.stock += parseInt(p.sl);
+                    updateThietBiSelect();
+                }
+            }
+            phieuMuonList = phieuMuonList.filter(p => p.id != id);
+            renderPhieuMuon();
+        }
+    }
+
+    function renderUserSelect() {
+        const select = document.getElementById('userSelect');
+        select.innerHTML = '<option value="">-- Chọn tài khoản --</option>';
+        users.forEach(u => {
+            select.innerHTML += `<option value="${u.id}">${u.role==='admin'?'Admin':'Sinh viên'} - ${u.name} (${u.id})</option>`;
+        });
+    }
+
+    function renderUser() {
+        if(currentUser.role !== 'admin') return;
+        const tbody = document.getElementById('tableUser');
+        tbody.innerHTML = '';
+        users.forEach(u => {
+            const isMe = u.id === currentUser.id;
+            tbody.innerHTML += `<tr>
+                <td>${u.id}</td><td>${u.name}</td>
+                <td><span class="badge ${u.role==='admin'?'bg-admin':'bg-student'}">${u.role.toUpperCase()}</span></td>
+                <td>${!isMe ? `<button class="btn-danger" onclick="xoaUser('${u.id}')">Xóa User</button>` : '<span style="color:#bdc3c7">Tài khoản của bạn</span>'}</td>
+            </tr>`;
+        });
+    }
+
+    function addUser() {
+        const id = document.getElementById('newUserId').value;
+        const name = document.getElementById('newUserName').value;
+        if(!id || !name) { alert("Vui lòng nhập đủ MSSV và Tên!"); return; }
+        
+        // Kiểm tra trùng lặp
+        if(users.find(u => u.id === id)) {
+            alert("Mã Sinh viên này đã tồn tại!"); return;
+        }
+
+        users.push({ id: id, name: name, role: 'student' });
+        alert("Đã thêm Sinh viên mới! Hệ thống sẽ tự động ghi log Audit.");
+        
+        document.getElementById('newUserId').value = '';
+        document.getElementById('newUserName').value = '';
+        renderUser();
+    }
+
+    function xoaUser(id) {
+        if(confirm("Bạn có chắc muốn xóa sinh viên này? Nếu họ đang nợ đồ, Trigger sẽ chặn lại đấy! (Demo giả lập)")) {
+            // Kiểm tra xem sinh viên này có phiếu "Đang mượn" hay không
+            let hasActiveBorrow = phieuMuonList.some(p => p.user === id && p.status === 'Đang mượn');
+            if(hasActiveBorrow) {
+                alert("LỖI SQL: Xóa thất bại! Sinh viên này vẫn còn thiết bị chưa trả (Trigger đã chặn lại).");
+            } else {
+                users = users.filter(u => u.id !== id);
+                alert("Đã xóa sinh viên thành công!");
+                renderUser();
+            }
+        }
+    }
+</script>
+</body>
+</html>

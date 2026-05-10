@@ -150,7 +150,32 @@ DELETE FROM CTHD
 WHERE MaHD IN (SELECT MaHD FROM HoaDon WHERE NgayLapHD < '2024-08-01');
 DELETE FROM HoaDon WHERE NgayLapHD < '2024-08-01';
 
+--Cách 2:
+-- Bước 1: Xóa các dòng con trong bảng CTHD dựa trên ngày của bảng HoaDon
+DELETE CTHD
+FROM CTHD
+JOIN HoaDon ON CTHD.MaHD = HoaDon.MaHD
+WHERE HoaDon.NgayLapHD < '2024-08-01';
+
+-- Bước 2: Xóa chính các hóa đơn đó trong bảng HoaDon
+DELETE FROM HoaDon 
+WHERE NgayLapHD < '2024-08-01';
+
+
+
 --5. Xóa tất cả các sản phẩm có đơn giá nhỏ hơn 50.
 DELETE FROM CTHD
 WHERE MaSP IN (SELECT MaSP FROM SanPham WHERE DonGia < 50);
 DELETE FROM SanPham WHERE DonGia < 50;
+
+--Cách 2
+-- Bước 1: Xóa các chi tiết hóa đơn (CTHD) liên quan đến sản phẩm giá rẻ
+DELETE CTHD
+FROM CTHD
+JOIN SanPham ON CTHD.MaSP = SanPham.MaSP
+WHERE SanPham.DonGia < 50;
+
+-- Bước 2: Xóa các sản phẩm đó khỏi bảng SanPham
+DELETE FROM SanPham 
+WHERE DonGia < 50;
+
